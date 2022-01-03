@@ -84,6 +84,23 @@ class DataView extends HTMLElement {
 
 customElements.define('data-view', DataView);
 
+class RemainingTime extends DataView {
+    getDefaults() {
+        return {
+            format: 'hh:mm:ss',
+            prop:   'watch:remaining',
+        };
+    }
+    config() {
+        this.format = existance(this.getAttribute('format'), this.getDefaults().format);
+    }
+    transform(state) {
+        return formatTime({value: Math.max(this.state), format: this.format, unit: 'seconds'});
+    }
+}
+
+customElements.define('remaining-time', RemainingTime);
+
 class TimerTime extends DataView {
     getDefaults() {
         return {
@@ -542,23 +559,25 @@ class DataTileSwitchGroup extends SwitchGroup {
         this.effect = 'ui:data-tile-switch-set';
     }
     config() {
-        this.speed    = document.querySelector('#data-tile--speed');     // tab 0
-        this.distance = document.querySelector('#data-tile--distance');  // tab 0
-        this.powerAvg = document.querySelector('#data-tile--power-avg'); // tab 1
-        this.slope    = document.querySelector('#data-tile--slope');     // tab 1
+        this.tab01    = document.querySelector('#data-tile--speed');            // tab 0
+        this.tab02    = document.querySelector('#data-tile--distance');         // tab 0
+        //this.tab11    = document.querySelector('#data-tile--power-avg');        // tab 1
+        this.tab12    = document.querySelector('#data-tile--slope');            // tab 1
+        this.tab11    = document.querySelector('#data-tile--remaining-time');   // tab 1
     }
     renderEffect(state) {
+        
         if(equals(state, 0)) {
-            this.speed.classList.add('active');
-            this.distance.classList.add('active');
-            this.powerAvg.classList.remove('active');
-            this.slope.classList.remove('active');
+            this.tab01.classList.add('active');
+            this.tab02.classList.add('active');
+            this.tab11.classList.remove('active');
+            this.tab12.classList.remove('active');
         }
         if(equals(state, 1)) {
-            this.speed.classList.remove('active');
-            this.distance.classList.remove('active');
-            this.powerAvg.classList.add('active');
-            this.slope.classList.add('active');
+            this.tab01.classList.remove('active');
+            this.tab02.classList.remove('active');
+            this.tab11.classList.add('active');
+            this.tab12.classList.add('active');
         }
         return;
     }

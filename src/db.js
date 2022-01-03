@@ -43,6 +43,7 @@ let db = {
 
     // Watch
     elapsed: 0,
+    remaining: 0,
     lapTime: 0,
     stepTime: 0,
     intervalIndex: 0,

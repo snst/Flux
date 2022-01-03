@@ -49,11 +49,12 @@
 
                             <div class="data-tile" id="data-tile--power">
                                 <h2 class="data-tile--heading">Power</h2>
-                                <div class="data-tile--value-cont">
+                                <power-group class="data-tile--value-cont complex">
                                     <power-value id=power-value"
-                                                 class="data-tile--value">--</power-value>
-
-                                </div>
+                                                   class="data-tile--value">--</power-value>
+                                    <power-target id=power-target-value"
+                                                    class="data-tile-target--value"></power-target>
+                                </power-group>
                             </div>
                             <div class="data-tile" id="data-tile--interval-time">
                                 <h2 class="data-tile--heading">Interval Time</h2>
@@ -77,6 +78,7 @@
                                                  class="data-tile-small--value">--</speed-value>
                                 </div>
                             </div>
+
                             <div class="data-tile--small wide" id="data-tile--slope">
                                 <h2 class="data-tile-small--heading">Slope</h2>
                                 <div class="data-tile-small--value-cont">
@@ -85,11 +87,11 @@
                                 </div>
                             </div>
 
-                            <div class="data-tile" id="data-tile--target">
-                                <h2 class="data-tile--heading">Target</h2>
-                                <div class="data-tile--value-cont">
-                                    <power-target id=power-target-value"
-                                                  class="data-tile--value">--</power-target>
+                            <div class="data-tile--small wide" id="data-tile--remaining-time">
+                                <h2 class="data-tile-small--heading">Remaining Time</h2>
+                                <div class="data-tile-small--value-cont">
+                                    <remaining-time id=remaining-time"
+                                                  class="data-tile-small--value">--:--:--</remaining-time>
                                 </div>
                             </div>
                             <div class="data-tile" id="data-tile--elapsed-time">

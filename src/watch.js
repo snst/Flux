@@ -1,11 +1,18 @@
 import { equals, exists, existance, first, last, xf, avg, max } from './functions.js';
 import { kphToMps, mpsToKph, timeDiff, fixInRange } from './utils.js';
 
+function beep(){
+    var audio = new Audio("beep.wav");
+    audio.play();
+}
+
 class Watch {
     constructor(args) {
         this.elapsed          = 0;
+        this.remaining        = 0;
         this.lapTime          = 0;
         this.stepTime         = 0;
+        this.skipTime         = 0;
 
         this.intervalIndex    = 0;
         this.stepIndex        = 0;
@@ -16,11 +23,12 @@ class Watch {
         this.stateWorkout     = 'stopped';
 
         this.intervals        = [];
+        this.workout          = null;
         this.init();
     }
     init() {
         let self = this;
-        xf.sub('db:workout',       workout => { self.intervals     = workout.intervals; });
+        xf.sub('db:workout',       workout => { self.intervals     = workout.intervals; self.workout = workout; });
         xf.sub('db:elapsed',       elapsed => { self.elapsed       = elapsed; });
         xf.sub('db:lapTime',          time => { self.lapTime       = time; });
         xf.sub('db:stepTime',         time => { self.stepTime      = time; });
@@ -56,6 +64,7 @@ class Watch {
         let self         = this;
         let intervalTime = self.intervals[0].duration;
         let stepTime     = self.intervals[0].steps[0].duration;
+        self.skipTime    = 0;
 
         xf.dispatch('workout:started');
 
@@ -109,6 +118,7 @@ class Watch {
             xf.dispatch('watch:intervalIndex', 0);
             xf.dispatch('watch:stepIndex',     0);
             xf.dispatch('watch:elapsed',       0);
+            xf.dispatch('watch:remaining',     0);
             xf.dispatch('watch:lapTime',       0);
         }
     }
@@ -126,6 +136,7 @@ class Watch {
         }
 
         xf.dispatch('watch:elapsed',  elapsed);
+        xf.dispatch('watch:remaining',  Math.max(0, self.workout.meta.duration - self.skipTime - elapsed));
         xf.dispatch('watch:lapTime',  lapTime);
         xf.dispatch('watch:stepTime', stepTime);
 
@@ -141,6 +152,7 @@ class Watch {
             let s             = self.stepIndex;
             let intervals     = self.intervals;
             let moreIntervals = i < (intervals.length - 1);
+            self.skipTime     += self.lapTime;
 
             if(moreIntervals) {
                 i += 1;
@@ -185,6 +197,7 @@ class Watch {
         let stepDuration     = self.intervalsToStepDuration(intervals, intervalIndex, stepIndex);
 
         self.dispatchInterval(intervalDuration, intervalIndex);
+        beep();
     }
     nextStep(intervals, intervalIndex, stepIndex) {
         let self         = this;
