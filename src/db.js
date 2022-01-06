@@ -180,10 +180,10 @@ xf.reg('ui:activity:save', (_, db) => {
 xf.reg('activity:save:success', (e, db) => {
     // file:download:activity
     // reset db session:
-    db.records = [];
-    db.resistanceTarget = 0;
-    db.slopeTarget = 0;
-    db.powerTarget = 0;
+    //db.records = [];
+    //db.resistanceTarget = 0;
+    //db.slopeTarget = 0;
+    //db.powerTarget = 0;
 });
 
 // Wake Lock

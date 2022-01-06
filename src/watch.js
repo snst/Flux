@@ -257,7 +257,13 @@ xf.reg('watch:stepIndex',     (index, db) => {
         xf.dispatch('ui:power-target-set', 0);
     }
 });
-xf.reg('workout:started', (x, db) => db.workoutStatus = 'started');
+xf.reg('workout:started', (x, db) => {
+    db.records = [];
+    db.resistanceTarget = 0;
+    db.slopeTarget = 0;
+    db.powerTarget = 0;
+    db.workoutStatus = 'started';
+});
 xf.reg('workout:stopped', (x, db) => db.workoutStatus = 'stopped');
 xf.reg('workout:done',    (x, db) => db.workoutStatus = 'done');
 xf.reg('watch:started',   (x, db) => {
