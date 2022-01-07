@@ -234,12 +234,25 @@ class CadenceTarget extends DataView {
             prop: 'db:cadenceTarget',
         };
     }
+    config() {
+        this.elem1 = document.querySelector('#cadence-target-value'); 
+        this.elem2 = document.querySelector('#cadence-tipp');
+    }
     transform(state) {
         if(equals(state, 0)) {
             return '';
         }
-
         return state;
+    }
+    render() {
+        if(equals(this.state, 0)) {
+            this.elem1.classList.remove('active');
+            this.elem2.classList.remove('active');
+        } else {
+            this.elem1.classList.add('active');
+            this.elem2.classList.add('active');
+        }
+        super.render()
     }
 }
 
@@ -287,7 +300,7 @@ class CadenceTipp extends DataView {
 }
 
 customElements.define('cadence-tipp', CadenceTipp);
-
+/*
 class CadenceGroup extends DataView {
     getDefaults() {
         return {
@@ -310,7 +323,7 @@ class CadenceGroup extends DataView {
 }
 
 customElements.define('cadence-group', CadenceGroup);
-
+*/
 
 class HeartRateValue extends DataView {
     getDefaults() {
@@ -343,7 +356,26 @@ class PowerTarget extends DataView {
             prop: 'db:powerTarget',
         };
     }
-}
+    config() {
+        this.elem1 = document.querySelector('#power-target-value'); 
+        this.elem2 = document.querySelector('#power-tipp');
+    }
+    transform(state) {
+        if(equals(state, 0)) {
+            return '';
+        }
+        return state;
+    }
+    render() {
+        if(equals(this.state, 0)) {
+            this.elem1.classList.remove('active');
+            this.elem2.classList.remove('active');
+        } else {
+            this.elem1.classList.add('active');
+            this.elem2.classList.add('active');
+        }
+        super.render()
+    }}
 
 customElements.define('power-target', PowerTarget);
 
@@ -718,7 +750,7 @@ export {
     CadenceValue,
     CadenceTarget,
     CadenceTipp,
-    CadenceGroup,
+    //CadenceGroup,
     SpeedValue,
     DistanceValue,
     HeartRateValue,

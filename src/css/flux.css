@@ -637,6 +637,15 @@ body.dark-theme {
     width: 2em;
 }
 
+.data-tile-tipp--value {
+    width: 0;
+}
+.data-tile-tipp--value.active {
+    width: 0;
+    font-size: 1.6em;
+    width: 1em;
+}
+
 .data-tile-target--value {
     width: 0;
 }
