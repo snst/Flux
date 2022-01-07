@@ -246,6 +246,48 @@ class CadenceTarget extends DataView {
 customElements.define('cadence-target', CadenceTarget);
 
 
+class CadenceTipp extends DataView {
+    postInit() {
+        this.target = 0
+        this.val = 0
+        this.state = '-'
+    }
+    onUpdateVal(propValue) {
+        this.val = propValue;
+        this.shallUpdate();
+    }
+    onUpdateTarget(propValue) {
+        this.target = propValue;
+        this.shallUpdate();
+    }
+    shallUpdate() {
+        let percent = 5
+        let state = ""
+        if (this.val != 0 && this.target != 0) {
+            let delta = 100 / this.val * (this.target - this.val)
+            if (delta > percent)
+                state = '\u21E7'; // up
+            else if (delta < -percent)
+                state = '\u21E9'; // down
+        }
+        if (this.state != state) {
+            this.state = state;
+            this.render();
+        }
+    }
+    connectedCallback() {
+        const self = this;
+        xf.sub('db:cadence', this.onUpdateVal.bind(this));
+        xf.sub('db:cadenceTarget', this.onUpdateTarget.bind(this));
+    }
+    disconnectedCallback() {
+        //document.removeEventListener(`db:${this.prop}`, this.onUpdate);
+        //document.removeEventListener(`db:${this.metric}`, this.onMetric);
+    }    
+}
+
+customElements.define('cadence-tipp', CadenceTipp);
+
 class CadenceGroup extends DataView {
     getDefaults() {
         return {
@@ -304,6 +346,48 @@ class PowerTarget extends DataView {
 }
 
 customElements.define('power-target', PowerTarget);
+
+class PowerTipp extends DataView {
+    postInit() {
+        this.target = 0
+        this.val = 0
+        this.state = '-'
+    }
+    onUpdateVal(propValue) {
+        this.val = propValue;
+        this.shallUpdate();
+    }
+    onUpdateTarget(propValue) {
+        this.target = propValue;
+        this.shallUpdate();
+    }
+    shallUpdate() {
+        let percent = 5
+        let state = ""
+        if (this.val != 0 && this.target != 0) {
+            let delta = 100 / this.val * (this.target - this.val)
+            if (delta > percent)
+                state = '\u21E7'; // up
+            else if (delta < -percent)
+                state = '\u21E9'; // down
+        }
+        if (this.state != state) {
+            this.state = state;
+            this.render();
+        }
+    }
+    connectedCallback() {
+        const self = this;
+        xf.sub('db:power', this.onUpdateVal.bind(this));
+        xf.sub('db:powerTarget', this.onUpdateTarget.bind(this));
+    }
+    disconnectedCallback() {
+        //document.removeEventListener(`db:${this.prop}`, this.onUpdate);
+        //document.removeEventListener(`db:${this.metric}`, this.onMetric);
+    }    
+}
+
+customElements.define('power-tipp', PowerTipp);
 
 class SlopeTarget extends DataView {
     getDefaults() {
@@ -633,6 +717,7 @@ export {
     IntervalTime,
     CadenceValue,
     CadenceTarget,
+    CadenceTipp,
     CadenceGroup,
     SpeedValue,
     DistanceValue,
@@ -645,6 +730,7 @@ export {
 
     SlopeTarget,
     PowerTarget,
+    PowerTipp,
 
     WorkoutName,
 
