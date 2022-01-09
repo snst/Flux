@@ -279,9 +279,9 @@ class CadenceTipp extends DataView {
         if (this.val != 0 && this.target != 0) {
             let delta = 100 / this.val * (this.target - this.val)
             if (delta > percent)
-                state = '\u21E7'; // up
+                state = '\u2B07'; // up
             else if (delta < -percent)
-                state = '\u21E9'; // down
+                state = '\u2B06'; // down
         }
         if (this.state != state) {
             this.state = state;
@@ -399,9 +399,9 @@ class PowerTipp extends DataView {
         if (this.val != 0 && this.target != 0) {
             let delta = 100 / this.val * (this.target - this.val)
             if (delta > percent)
-                state = '\u21E7'; // up
+                state = '\u2B07'; // up
             else if (delta < -percent)
-                state = '\u21E9'; // down
+                state = '\u2B06'; // down
         }
         if (this.state != state) {
             this.state = state;
@@ -527,7 +527,7 @@ class PowerValue extends DataView {
 }
 
 customElements.define('power-value', PowerValue);
-
+/*
 function scale(value, max = 100) {
     return 100 * (value/max);
 }
@@ -599,7 +599,7 @@ class InstantPowerGraph extends HTMLElement {
 }
 
 customElements.define('instant-power-graph', InstantPowerGraph);
-
+*/
 
 class SwitchGroup extends HTMLElement {
     constructor() {
@@ -766,7 +766,7 @@ export {
 
     WorkoutName,
 
-    InstantPowerGraph,
+    //InstantPowerGraph,
 
     SwitchGroup,
     DataTileSwitchGroup,

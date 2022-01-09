@@ -24,6 +24,20 @@ class Watch {
 
         this.intervals        = [];
         this.workout          = null;
+
+        this.historyLength = 300;
+        this.historyHeart = Array(this.historyLength).fill(0);  
+        this.historyCadence = Array(this.historyLength).fill(0); 
+        this.historyCadenceTarget = Array(this.historyLength).fill(0); 
+        this.historyPower = Array(this.historyLength).fill(0);
+        this.historyPowerTarget = Array(this.historyLength).fill(0);
+
+        this.heartRate = 0;
+        this.powerTarget = 0;
+        this.power = 0;
+        this.cadence = 0;
+        this.cadenceTarget = 0;
+
         this.init();
     }
     init() {
@@ -45,6 +59,13 @@ class Watch {
                 console.log(`Workout done!`);
             }
         });
+
+        xf.sub('db:heartRate',      val => { self.heartRate  = val; });
+        xf.sub('db:powerTarget',    val => { self.powerTarget  = val; });
+        xf.sub('db:power',          val => { self.power  = val; });
+        xf.sub('db:cadence',        val => { self.cadence  = val; });
+        xf.sub('db:cadenceTarget',  val => { self.cadenceTarget  = val; });
+        this.powerplot = document.getElementById('powerplot')
     }
     isStarted()        { return this.state        === 'started'; };
     isPaused()         { return this.state        === 'paused'; };
@@ -143,6 +164,8 @@ class Watch {
         if((self.isWorkoutStarted()) && (stepTime <= 0)) {
             self.step();
         }
+
+        this.plot();
     }
     lap() {
         let self = this;
@@ -224,6 +247,66 @@ class Watch {
         xf.dispatch('watch:stepTime',     stepDuration);
         xf.dispatch('watch:stepIndex',    stepIndex);
         xf.dispatch('watch:step');
+    }
+
+    plot() {
+        this.historyHeart = this.historyHeart.concat(this.heartRate)
+        this.historyCadence = this.historyCadence.concat(this.cadence)
+        this.historyPower = this.historyPower.concat(this.power)
+        this.historyCadenceTarget = this.historyCadenceTarget.concat(this.cadenceTarget)
+        this.historyPowerTarget = this.historyPowerTarget.concat(this.powerTarget)
+        while (this.historyHeart.length > this.historyLength) {
+            this.historyHeart.splice(0, 1)
+            this.historyCadence.splice(0, 1)
+            this.historyPower.splice(0, 1)
+            this.historyCadenceTarget.splice(0, 1)
+            this.historyPowerTarget.splice(0, 1)
+        }
+
+        Plotly.purge(this.powerplot);
+        var layout = {
+            plot_bgcolor:"#28272D",
+            paper_bgcolor:"#28272D",
+            showlegend: false,
+            margin: {
+            l: 0,
+            r: 0,
+            b: 0,
+            t: 0,
+            pad: 40
+        },
+        };
+        let config = {'displayModeBar': false, 'staticPlot': true}
+
+        let data = [
+            {
+                y: this.historyPowerTarget,
+                mode: 'lines',
+                line: {color: '#c8eac8'}
+            },
+            {
+                y: this.historyCadenceTarget,
+                mode: 'lines',
+                line: {color: '#b3d4ff'}
+            },
+            {
+                y: this.historyPower,
+                mode: 'lines',
+                line: {color: '#57C057'}
+            },
+            {
+                y: this.historyHeart,
+                mode: 'lines',
+                line: {color: '#FE340B'}
+            },
+            {
+                y: this.historyCadence,
+                mode: 'lines',
+                line: {color: '#328AFF'}
+            },
+        ]
+
+        Plotly.plot(this.powerplot, data, layout, config=config);  
     }
 }
 
