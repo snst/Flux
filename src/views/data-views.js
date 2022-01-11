@@ -279,9 +279,9 @@ class CadenceTipp extends DataView {
         if (this.val != 0 && this.target != 0) {
             let delta = 100 / this.val * (this.target - this.val)
             if (delta > percent)
-                state = '\u2B07'; // up
+                state = '\u25B2'; // up
             else if (delta < -percent)
-                state = '\u2B06'; // down
+                state = '\u25BC'; // down
         }
         if (this.state != state) {
             this.state = state;
@@ -399,9 +399,9 @@ class PowerTipp extends DataView {
         if (this.val != 0 && this.target != 0) {
             let delta = 100 / this.val * (this.target - this.val)
             if (delta > percent)
-                state = '\u2B07'; // up
+                state = '\u25B2'; // up
             else if (delta < -percent)
-                state = '\u2B06'; // down
+                state = '\u25BC'; // down
         }
         if (this.state != state) {
             this.state = state;
@@ -478,48 +478,26 @@ customElements.define('power-avg', PowerAvg);
 
 class PowerValue extends DataView {
     postInit() {
-        this.period = 1;
-        this.buffer = [];
-        this.bufferLength = 0;
+        this.n = 4;
+        this.last_value = 0;
     }
     subs() {
         xf.sub(`${this.prop}`, this.onUpdate.bind(this));
-        xf.sub('db:powerSmoothing', this.onPowerSmoothing.bind(this));
     }
     unsubs() {
         xf.unsub(`${this.prop}`, this.onUpdate.bind(this));
-        xf.unsub('db:powerSmoothing', this.onPowerSmoothing.bind(this));
     }
     getDefaults() {
         return {
             prop: 'db:power',
         };
     }
-    canUpdate() {
-        return this.bufferLength >= this.period;
-    }
-    shouldUpdate(value) {
-        if(this.canUpdate()) {
-            return !equals(value, this.state) && !this.disabled;
-        } else {
-            return false;
-        }
-    };
     onUpdate(propValue) {
-        const value = this.getValue(propValue);
-
-        this.buffer.push(value);
-        this.bufferLength += 1;
-
-        if(this.shouldUpdate()) {
-            this.state = avg(this.buffer);
-            this.buffer = [];
-            this.bufferLength = 0;
-            this.render();
-        }
-    }
-    onPowerSmoothing(value) {
-        this.period = value;
+        const current_val = this.getValue(propValue);
+        let val = (2 / (this.n + 1)) * (current_val - this.last_value) + this.last_value;
+        this.state = val;
+        this.last_value = val;
+        this.render();
     }
     transform(state) {
         return Math.floor(state);
