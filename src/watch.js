@@ -1,5 +1,6 @@
 import { equals, exists, existance, first, last, xf, avg, max } from './functions.js';
-import { kphToMps, mpsToKph, timeDiff, fixInRange } from './utils.js';
+import { kphToMps, mpsToKph, timeDiff } from './utils.js';
+import { models } from './models/models.js';
 
 function beep(){
     var audio = new Audio("beep.wav");
@@ -335,7 +336,10 @@ xf.reg('watch:stepIndex',     (index, db) => {
         xf.dispatch('ui:cadence-target-set', 0);
     }
     if(exists(powerTarget)) {
-        xf.dispatch('ui:power-target-set', parseInt(db.ftp * powerTarget));
+        xf.dispatch('ui:power-target-set', models.ftp.toAbsolute(powerTarget, db.ftp));
+        if(!exists(slopeTarget) && !equals(db.mode, 'erg')) {
+            xf.dispatch('ui:mode-set', 'erg');
+        }
     } else {
         xf.dispatch('ui:power-target-set', 0);
     }
@@ -369,6 +373,11 @@ xf.reg('watch:elapsed', (x, db) => {
                   distance:   db.distance};
     db.records.push(record);
     db.lap.push(record);
+
+    if(equals(db.elapsed % 60, 0)) {
+        models.session.backup(db);
+        console.log(`backing up of ${db.records.length} records ...`);
+    }
 });
 xf.reg('watch:lap', (x, db) => {
     let timeEnd   = Date.now();
@@ -381,10 +390,6 @@ xf.reg('watch:lap', (x, db) => {
                       totalElapsedTime: elapsed,
                       avgPower:         Math.round(avg(db.lap, 'power')),
                       maxPower:         max(db.lap, 'power')});
-        // console.log(`lap: `,
-        //             {timestamp:        new Date(timeEnd),
-        //              startTime:        new Date(timeStart),
-        //              totalElapsedTime: elapsed});
     }
     db.lap = [];
     db.lapStartTime = timeEnd + 0;

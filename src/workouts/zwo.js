@@ -1,41 +1,34 @@
-import { equals, existance, exists, empty, repeat, capitalize } from '../functions.js';
-import { toDecimalPoint, divisors } from '../utils.js';
+import { equals, existance, exists, empty, repeat, capitalize, toFixed } from '../functions.js';
 
 function readAttribute(args = {}) {
-    const defaults = {
-        transform: ((x) => x),
-        fallback:  0,
-    };
-
-    let el        = args.el;
-    let name      = args.name;
-    let value     = existance(args.fallback, defaults.fallback);
-    let transform = existance(args.transform, defaults.transform);
+    const el       = args.el;
+    const name     = args.name;
+    const decode   = existance(args.decode, ((x) => x));
 
     if(el.hasAttribute(name)) {
-        value = el.getAttribute(name);
-        return transform(value);
+        return decode(el.getAttribute(name));
     } else {
         return undefined;
     }
 }
 
 function writeAttribute(args = {}) {
-    let name  = existance(args.name);
-    let value = existance(args.value);
-    let attr  = `${name}="${value}"`;
+    const encode = existance(args.encode, ((x) => x));
+    const name   = existance(args.name);
+    const value  = existance(args.value);
 
-    return attr;
+    return `${name}="${encode(value)}"`;
 }
 
 function Attribute(args = {}) {
     const defaults = {
         name:      '',
-        transform: ((x) => x),
+        decode:    ((x) => x),
     };
 
-    const name      = existance(args.name, defaults.name);
-    const transform = existance(args.transform, defaults.transform);
+    const name   = existance(args.name, defaults.name);
+    const decode = existance(args.decode, defaults.decode);
+    const encode = existance(args.encode, decode);
 
     function getName() {
         return name;
@@ -43,12 +36,12 @@ function Attribute(args = {}) {
 
     function read(args = {}) {
         const el = existance(args.el);
-        return readAttribute({el, name, transform});
+        return readAttribute({el, name, decode});
     }
 
     function write(args = {}) {
-        const value = transform(existance(args.value));
-        return writeAttribute({name, value});
+        const value = existance(args.value);
+        return writeAttribute({name, value, encode});
     }
 
     return Object.freeze({
@@ -254,18 +247,33 @@ function FreeRide(args = {}) {
     };
 
     function toInterval(element) {
-        const duration = element.Duration;
+        let duration   = existance(element.Duration, 1);
+        const sim      = element.Sim;
         const power    = 0;
         const slope    = 0;
+        const steps    = [];
+
+        if(exists(sim)) {
+            let simDuration = 0;
+            for(let i=0; i< sim.length; i+=2) {
+                simDuration += sim[i+1];
+                steps.push({duration: sim[i+1], slope: sim[i], power});
+            }
+            if(simDuration < duration) {
+                steps.push({duration: (duration - simDuration), slope, power});
+            }
+            if(simDuration > duration) {
+                duration = simDuration;
+            }
+        } else {
+            steps.push({duration, slope, power});
+        }
 
         return {
             duration: duration,
-            steps: [{
-                duration: duration,
-                slope: slope,
-                power: power
-            }],
+            steps: steps,
         };
+
     }
 
     return Element(spec);
@@ -278,12 +286,12 @@ function Warmup(args = {}) {
 
     const timeDx = existance(args.timeDx, defaults.timeDx);
 
-    const spec = {
+    const spec = Object.assign({
         name:       'Warmup',
         tagOpen:    '<Warmup',
         tagClose:   ' />',
         toInterval: toInterval,
-    };
+    }, args.spec);
 
     function toInterval(element) {
         const duration  = element.Duration;
@@ -302,7 +310,7 @@ function Warmup(args = {}) {
         }
 
         const fixedSteps = steps.map((step) => {
-            step.power = toDecimalPoint(step.power, 2);
+            step.power = toFixed(step.power, 2);
             return step;
         });
 
@@ -346,7 +354,7 @@ function Cooldown(args = {}) {
         }
 
         const fixedSteps = steps.map((step) => {
-            step.power = toDecimalPoint(step.power, 2);
+            step.power = toFixed(step.power, 2);
             return step;
         });
 
@@ -357,6 +365,16 @@ function Cooldown(args = {}) {
     }
 
     return Element(spec);
+}
+
+function Ramp(args = {}) {
+    const spec = {
+        name:       'Ramp',
+        tagOpen:    '<Ramp',
+        tagClose:   ' />',
+    };
+
+    return Warmup(spec);
 }
 
 function readContent(el) {
@@ -488,29 +506,42 @@ function Body() {
     });
 }
 
+function encodeSim(arr) {
+    return arr.join(',');
+}
+
+function decodeSim(str) {
+    return str.split(',').reduce((acc, x) => {
+        const n = parseFloat(x);
+        if(!isNaN(n)) acc.push(n);
+        return acc;
+    }, []);
+}
+
 const Attrs = {
-    Duration:    Attribute({name: 'Duration', transform: parseInt}),
-    OnDuration:  Attribute({name: 'OnDuration', transform: parseInt}),
-    OffDuration: Attribute({name: 'OffDuration', transform: parseInt}),
+    Duration:    Attribute({name: 'Duration', decode: parseInt}),
+    OnDuration:  Attribute({name: 'OnDuration', decode: parseInt}),
+    OffDuration: Attribute({name: 'OffDuration', decode: parseInt}),
+    Power:     Attribute({name: 'Power', decode: parseFloat}),
+    OnPower:   Attribute({name: 'OnPower', decode: parseFloat}),
+    OffPower:  Attribute({name: 'OffPower', decode: parseFloat}),
+    PowerLow:  Attribute({name: 'PowerLow', decode: parseFloat}),
+    PowerHigh: Attribute({name: 'PowerHigh', decode: parseFloat}),
 
-    Power:     Attribute({name: 'Power', transform: parseFloat}),
-    OnPower:   Attribute({name: 'OnPower', transform: parseFloat}),
-    OffPower:  Attribute({name: 'OffPower', transform: parseFloat}),
-    PowerLow:  Attribute({name: 'PowerLow', transform: parseFloat}),
-    PowerHigh: Attribute({name: 'PowerHigh', transform: parseFloat}),
+    Cadence:        Attribute({name: 'Cadence', decode: parseInt}),
+    CadenceLow:     Attribute({name: 'CadenceLow', decode: parseInt}),
+    CadenceHigh:    Attribute({name: 'CadenceHigh', decode: parseInt}),
+    CadenceResting: Attribute({name: 'CadenceResting', decode: parseInt}),
 
-    Cadence:        Attribute({name: 'Cadence', transform: parseInt}),
-    CadenceLow:     Attribute({name: 'CadenceLow', transform: parseInt}),
-    CadenceHigh:    Attribute({name: 'CadenceHigh', transform: parseInt}),
-    CadenceResting: Attribute({name: 'CadenceResting', transform: parseInt}),
+    Slope:     Attribute({name: 'Slope', decode: parseFloat}),
+    OnSlope:   Attribute({name: 'OnSlope', decode: parseFloat}),
+    OffSlope:  Attribute({name: 'OffSlope', decode: parseFloat}),
+    SlopeLow:  Attribute({name: 'SlopeLow', decode: parseFloat}),
+    SlopeHigh: Attribute({name: 'SlopeHigh', decode: parseFloat}),
 
-    Slope:     Attribute({name: 'Slope', transform: parseFloat}),
-    OnSlope:   Attribute({name: 'OnSlope', transform: parseFloat}),
-    OffSlope:  Attribute({name: 'OffSlope', transform: parseFloat}),
-    SlopeLow:  Attribute({name: 'SlopeLow', transform: parseFloat}),
-    SlopeHigh: Attribute({name: 'SlopeHigh', transform: parseFloat}),
+    Sim:  Attribute({name: 'Sim', decode: decodeSim, encode: encodeSim}),
 
-    Repeat: Attribute({name: 'Repeat', transform: parseInt}),
+    Repeat: Attribute({name: 'Repeat', decode: parseInt}),
 };
 
 const Elements = {
@@ -518,6 +549,7 @@ const Elements = {
     SteadyState: Element({name: 'SteadyState', tagOpen: '<SteadyState', tagClose: ' />'}),
     IntervalsT:  IntervalsT(),
     FreeRide:    FreeRide(),
+    Ramp:        Ramp(),
     Cooldown:    Cooldown(),
     Unknown:     Unknown(),
     Author:      Element({name: 'author', tagOpen: '<author>', tagClose: '</author>'}),

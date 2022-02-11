@@ -1,4 +1,4 @@
-import { xf, isObject, equals, exists } from '../functions.js';
+import { xf, isObject, equals, exists, existance, debounce } from '../functions.js';
 import { ble } from './web-ble.js';
 import { uuids } from './uuids.js';
 import { Device } from './device.js';
@@ -15,25 +15,55 @@ class Controllable extends Device {
     defaultFilter() {
         return ble.requestFilters.controllable;
     }
-    postInit(args) {
-        const self = this;
-        self.mode = 'erg';
-    }
     async start(device) {
         const self = this;
+        self.mode = models.mode.state;
+        self.userWeight = models.weight.state;
 
         self.control = await self.controlService(device);
+        self.user    = await self.userService(device);
+        self.postStart({delay: self.control.delay});
+    }
+    postStart(args = {}) {
+        const self = this;
+        const delay = existance(args.delay, 500);
 
-        xf.sub(`db:mode`,             self.onMode.bind(self));
-        xf.sub('db:powerTarget',      self.onPowerTarget.bind(self));
-        xf.sub('db:resistanceTarget', self.onResistanceTarget.bind(self));
-        xf.sub('db:slopeTarget',      self.onSlopeTarget.bind(self));
+        self.debounced = {
+            onPowerTarget: debounce(
+                self.onPowerTarget.bind(self), delay, {trailing: true, leading: true}
+            ),
+            onResistanceTarget: debounce(
+                self.onResistanceTarget.bind(self), delay, {trailing: true, leading: true}
+            ),
+            onSlopeTarget: debounce(
+                self.onSlopeTarget.bind(self), delay, {trailing: true, leading: true}
+            ),
+        };
+
+        xf.sub('db:mode',             self.onMode.bind(self));
+        xf.sub('db:weight',           self.onUserWeight.bind(self));
+        xf.sub('db:powerTarget',      self.debounced.onPowerTarget.bind(self));
+        xf.sub('db:resistanceTarget', self.debounced.onResistanceTarget.bind(self));
+        xf.sub('db:slopeTarget',      self.debounced.onSlopeTarget.bind(self));
+    }
+    stop() {
+        const self = this;
+        self.control = {};
+        self.user  = {};
     }
     onMode(mode) {
         const self = this;
         self.mode = mode;
     }
-    onPowerTarget(power) {
+    onUserWeight(weight) {
+        const self = this;
+        self.userWeight = weight;
+
+        if(exists(self.user.setUserWeight)) {
+            self.user.setUserWeight(self.userWeight);
+        }
+    }
+    async onPowerTarget(power) {
         const self = this;
         if(self.isConnected(self.device) && (equals(self.mode, 'erg'))) {
             self.control.setTargetPower(power);
@@ -69,6 +99,7 @@ class Controllable extends Device {
         if(self.hasService(self.services, uuids.fec)) {
             const service = await self.getService(uuids.fec);
             const fec = new FEC({
+                controllable: self,
                 onData: onIndoorBikeData.bind(self),
                 service,
                 ble,
@@ -80,6 +111,7 @@ class Controllable extends Device {
         if(self.hasService(self.services, uuids.cyclingPower)) {
             const service = await self.getService(uuids.cyclingPower);
             const wcps = new WahooCyclingPower({
+                controllable: self,
                 onData: onIndoorBikeData.bind(self),
                 service,
                 ble,
@@ -89,7 +121,7 @@ class Controllable extends Device {
             return wcps;
         }
 
-        console.warn(`no FTMS, FE-C over BLE, or Wahoo CPS found on device ${self.device.name}`, self.device);
+        console.warn(`:controlService 'no FTMS, FE-C over BLE, or Wahoo CPS found on device ${self.device.name}'`);
 
         return {
             setTargetPower:      ((x) => x),
@@ -97,10 +129,32 @@ class Controllable extends Device {
             setTargetSlope:      ((x) => x)
         };
     }
+    async userService() {
+        const self = this;
+
+        if(equals(self.control.protocol, 'ftms')) {
+            // only 1 control service allowed else they conflict
+        }
+        if(equals(self.control.protocol, 'fec')) {
+            // use fec
+            return self.control;
+        }
+        if(equals(self.control.protocol, 'wcps')) {
+            // use wcps
+            return self.control;
+        }
+
+        console.warn(`:userService 'no compatible service found on device ${self.device.name}'`);
+
+        return {
+            setUserWeight: ((x) => x),
+        };
+    }
 }
 
 function onIndoorBikeData(value) {
     const self = this;
+
     if(exists(value.power) && models.sources.isSource('power', self.id)) {
         xf.dispatch(`power`, value.power);
     };
@@ -110,7 +164,8 @@ function onIndoorBikeData(value) {
     if(exists(value.speed) && models.sources.isSource('speed', self.id)) {
         xf.dispatch(`speed`, value.speed);
     };
-    if(exists(value.heartRate) && models.sources.isSource('heartRate', self.id)) {
+    if(exists(value.heartRate) && models.sources.isSource('heartRate', self.id)
+       && !equals(value.heartRate, 255)) {
         xf.dispatch(`heartRate`, value.heartRate);
     };
     if(exists(value.status) && models.sources.isSource('power', self.id)) {

@@ -1,6 +1,6 @@
 import { uuids } from '../uuids.js';
 import { BLEService } from '../service.js';
-import { measurement } from './measurement.js';
+import { Measurement } from './measurement.js';
 import { feature } from './feature.js';
 import { equals, exists, existance, first } from '../../functions.js';
 
@@ -31,8 +31,14 @@ class SpeedCadenceService extends BLEService {
             },
         };
     }
-    async config() {
+    async postStart() {
         const self = this;
+
+        const measurement = Measurement();
+
+        measurement.cadence.setMaxRateCount(
+            existance(self.options.maxRateCount)
+        );
 
         if(self.supported('measurement')) {
             await self.sub('measurement', measurement.decode, self.onData);

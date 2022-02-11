@@ -17,9 +17,8 @@ import { ble } from './web-ble.js';
 //               for this.id
 
 class Device {
-    constructor(args) {
+    constructor(args = {}) {
         this.init(args);
-        if(!exists(args)) args = {};
         this.id       = existance(args.id, this.defaultId());
         this.name     = existance(args.name, this.defaultName());
         this.filter   = existance(args.filter, this.defaultFilter());
@@ -82,9 +81,11 @@ class Device {
         const self = this;
         xf.dispatch(`${self.id}:disconnected`);
         xf.dispatch(`${self.id}:name`, '--');
-        console.log(`Disconnected ${self.id}, ${self.name}.`);
+        self.stop();
         self.device.removeEventListener('gattserverdisconnected', self.onDisconnect.bind(self));
+        console.log(`Disconnected ${self.id}, ${self.name}.`);
     }
+    stop() {}
     hasService(services, uuid) {
         let res = false;
         for(let service of services) {

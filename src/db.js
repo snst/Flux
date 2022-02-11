@@ -91,9 +91,15 @@ xf.reg('ui:page-set', (page, db) => {
 xf.reg('ui:mode-set', (mode, db) => {
     db.mode = models.mode.set(mode);
 
-    if(equals(mode, 'erg'))        xf.dispatch(`ui:power-target-set`, db.powerTarget);
-    if(equals(mode, 'resistance')) xf.dispatch(`ui:resistance-target-set`, db.resistanceTarget);
-    if(equals(mode, 'slope'))      xf.dispatch(`ui:slope-target-set`, db.slopeTarget);
+    if(equals(mode, 'erg')) {
+        xf.dispatch(`ui:power-target-set`, db.powerTarget);
+    }
+    if(equals(mode, 'resistance')) {
+        xf.dispatch(`ui:resistance-target-set`, db.resistanceTarget);
+    }
+    if(equals(mode, 'slope')) {
+        xf.dispatch(`ui:slope-target-set`, db.slopeTarget);
+    }
 });
 
 // UI options
@@ -217,11 +223,11 @@ xf.reg(`ant:search:stopped`, (x, db) => {
 //
 xf.reg('app:start', async function(_, db) {
 
-    db.ftp = models.ftp.restore();
-    db.weight = models.weight.restore();
-    db.theme = models.theme.restore();
-    db.measurement = models.measurement.restore();
-    db.dataTileSwitch = models.dataTileSwitch.restore(),
+    db.ftp = models.ftp.set(models.ftp.restore());
+    db.weight = models.weight.set(models.weight.restore());
+    db.theme = models.theme.set(models.theme.restore());
+    db.measurement = models.measurement.set(models.measurement.restore());
+    db.dataTileSwitch = models.dataTileSwitch.set(models.dataTileSwitch.restore()),
 
     db.workouts = models.workouts.restore();
     db.workout = models.workout.restore(db);

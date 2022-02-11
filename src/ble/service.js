@@ -21,6 +21,7 @@ class BLEService {
         this.ble     = existance(args.ble);
         this.service = existance(args.service);
         this.onData  = existance(args.onData, ((x) => x));
+        this.options = existance(args.options, {});
         this.postInit(args);
     }
     postInit(args = {}) {
@@ -37,7 +38,7 @@ class BLEService {
     async start() {
         const self = this;
         await self.getCharacteristics(self.service);
-        await self.config();
+        await self.postStart();
     }
     async config() {
         const self = this;
@@ -84,6 +85,17 @@ class BLEService {
 
         if(exists(characteristic)) {
             await self.ble.sub(characteristic, eventToValue(decoder, callback));
+            return true;
+        } else {
+            return false;
+        }
+    }
+    async unsub(prop, decoder, callback) {
+        const self = this;
+        const characteristic = self.characteristic(prop);
+
+        if(exists(characteristic)) {
+            await self.ble.unsub(characteristic, eventToValue(decoder, callback));
             return true;
         } else {
             return false;

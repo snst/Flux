@@ -1,5 +1,5 @@
-let workouts =
-[`<workout_file>
+let workouts = [
+        `<workout_file>
     <author>Marinov</author>
     <name>Dijon</name>
     <category>VO2 Max</category>

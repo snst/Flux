@@ -12,7 +12,7 @@ Flux is an App for executing structured workouts on a smart trainer.
 The web version is free to use and open source. It is developed as a static PWA, has zero dependancies and is completly independant to run.
 Everything happens in your Browser and stays in there. It uses Web Bluetooth, Web Serial, Web Components, IndexDB, Local Storage, WakeLock API.
 
-_Status_: I am working on adding automated testing while refactoring the code and moving some parts to a separate projects like [FitFile](https://github.com/dvmarinoff/FitFile), [WebANT](https://github.com/dvmarinoff/WebANT), [Functions](https://github.com/dvmarinoff/Functions)
+_Status_: I am working on ANT+ support, the latest code is moved to a separate project [WebANT](https://github.com/dvmarinoff/WebANT).
 
 ## Screenshots
 
@@ -87,15 +87,18 @@ The following table is copied from [DC Rainmaker Trainer Guide](https://www.dcra
 
 ### ANT+
 
-Support for ANT+ is experimental at the moment. Works only on Linux desktop in combination with ANT+ stick.
-Follow these [instructions](https://github.com/dvmarinoff/Flux/wiki/How-to:-ANT----stick-on-Ubuntu) to give permissions to the ANT+ USB stick.
-Support for Android and Windows 10 is coming soon.
+Support for ANT+ is experimental at the moment. It is being rewritten right now and the code is moved to [WebANT](https://github.com/dvmarinoff/WebANT), which has a separate demo. When it becomes stable enough will be merged here. It currently has support for MacOS, Linux and Android, Windows 10 is a possibility.
+
 
 The current development setup is using Suunto movestick mini, Garmin Fenix 5 watch broadcasting heart rate,
-Tacx Heart Rate monitor, and Tacx Flux S trainer, with an Ubuntu 20.04.2 LTS laptop and M1 Mac.
+Tacx Heart Rate monitor, Tacx Flux S trainer, and X240 laptop with Ubuntu 20.04.2 LTS, M1 Mac, and Samsung S9 Android phone.
 
 ## The Demo
 You can check a pre-release demo of the web version at
 [Latest Version on master](https://flux-three.vercel.app/), or [Latest development vesion](https://flux-devel.vercel.app/)
 
 Keep in mind it is in active development and will change and break on daily bases, that's until the first stable version is released.
+
+## Manual
+
+- [How to use the connection settings](https://github.com/dvmarinoff/Flux/discussions/91)
